@@ -1,0 +1,67 @@
+# Версия docker-compose
+version: '2'
+# Список наших сервисов (контейнеров)
+services:
+  nginx:
+    container_name: nginx
+    # используем последний стабильный образ nginx
+    image: nginx:latest
+    networks:
+      application_nerwork:
+        ipv4_address: 172.18.18.2
+    # маршрутизируем порты
+    ports:
+      - "80:80"
+      - "443:443"
+    # монтируем директории, слева директории на основной машине, справа - куда они монтируются в контейнере
+    volumes:
+      - ./hosts:/etc/nginx/conf.d
+      - ./:/var/www
+      - ./logs:/var/log/nginx
+    # nginx должен общаться с php контейнером
+    links:
+      - php
+  php:
+    container_name: php
+    # у нас свой образ для PHP, указываем путь к нему и говорим что его надо собрать
+    build: ./images/php
+    networks:
+      application_nerwork:
+        ipv4_address: 172.18.18.3
+    # этот образ будет общаться с mysql
+    links:
+      - db
+    depends_on:
+      - db
+    # монтируем директорию с проектами
+    volumes:
+      - ./:/var/www
+
+  db:
+    image: postgres:12
+    container_name: db
+    restart: always
+    networks:
+      application_nerwork:
+        ipv4_address: 172.18.18.4
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: devsecret
+      POSTGRES_USER: devuser
+      POSTGRES_DB: devdb
+    expose:
+      - 54320
+    ports:
+      - "54320:5432"
+
+networks:
+  application_nerwork:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.18.0/24
+          gateway: 172.18.18.1
