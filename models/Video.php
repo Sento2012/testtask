@@ -3,6 +3,7 @@
 namespace app\models;
 
 use app\helpers\ProjectHelper;
+use app\helpers\TimeHelper;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
 use yii\db\Expression;
@@ -71,5 +72,10 @@ class Video extends ActiveRecord
     public function getWebThumbnailPath(): string
     {
         return ProjectHelper::getThumbnailImageRoot() . $this->thumbnail;
+    }
+
+    public function getFormattedDuration(): string
+    {
+        return TimeHelper::getFormattedTime($this->duration);
     }
 }
