@@ -87,6 +87,7 @@ class VideoSearch extends Video
             ->andFilterWhere(['ilike', 'thumbnail', $this->thumbnail]);
 
         $query->limit($this->limit);
+        $query->offset($this->limit * $params['page'] ?? 0);
         $query->orderBy($this->createSortExpressions());
 
         return $dataProvider;
